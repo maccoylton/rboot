@@ -306,7 +306,7 @@ uint32_t NOINLINE find_image(void) {
 	ets_delay_us(BOOT_DELAY_MICROS);
 #endif
 
-	ets_printf("\r\nrBoot v1.4.2 - richardaburton@gmail.com\r\n");
+	ets_printf("\r\nrBoot4LCM v0.0.1\r\n");
 
 	// read rom header
 	SPIRead(0, header, sizeof(rom_header));
@@ -431,15 +431,32 @@ uint32_t NOINLINE find_image(void) {
 	if (system_rtc_mem(RBOOT_RTC_ADDR, &rtc, sizeof(rboot_rtc_data), RBOOT_RTC_READ) &&
 		(rtc.chksum == calc_chksum((uint8_t*)&rtc, (uint8_t*)&rtc.chksum))) {
 
-		if (rtc.next_mode & MODE_TEMP_ROM) {
+// 		if (rtc.next_mode & MODE_TEMP_ROM) {
 			if (rtc.temp_rom >= romconf->count) {
 				ets_printf("Invalid temp rom selected.\r\n");
 				return 0;
 			}
 			ets_printf("Booting temp rom.\r\n");
 			temp_boot = 1;
-			romToBoot = rtc.temp_rom;
-		}
+
+    unsigned int  sysparam_len = 32;
+    unsigned char sysparam[] = {
+      0x45, 0x4f, 0x52, 0x70, 0x01, 0x40, 0x00, 0x00,
+      0x01, 0x80, 0x0b, 0x00, 0x6f, 0x74, 0x61, 0x5f,
+      0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x01,
+      0xa0, 0x05, 0x00, 0x30, 0x2e, 0x30, 0x2e, 0x30
+    };
+    unsigned char fourzeros[] = {0,0,0,0};
+    SPIEraseSector(SYSPARAM_SECTOR);
+    SPIEraseSector(SYSPARAM_SECTOR+1);
+    SPIWrite(SYSPARAM_SECTOR*SECTOR_SIZE, sysparam, sysparam_len);
+    sysparam[5]=0x80; //changes from 0x40 firstactive to 0x80 secondstale
+    SPIWrite((SYSPARAM_SECTOR+1)*SECTOR_SIZE, sysparam, sysparam_len);
+    SPIWrite((BOOT_CONFIG_SECTOR + 1)*SECTOR_SIZE,fourzeros,4);
+
+	romToBoot = 1;
+// 			romToBoot = rtc.temp_rom;
+// 		}
 	}
 #endif
 
