@@ -75,7 +75,6 @@ extern "C" {
 #define CHKSUM_INIT 0xef
 
 #define SECTOR_SIZE 0x1000
-#define SYSPARAM_SECTOR    0xf7
 #define BOOT_CONFIG_SECTOR 1
 
 #define BOOT_CONFIG_MAGIC 0xe1
@@ -149,7 +148,9 @@ typedef struct {
 static uint8_t default_config(rboot_config *romconf, uint32_t flashsize) {
 	romconf->count = 2;
 	romconf->roms[0] = SECTOR_SIZE * (BOOT_CONFIG_SECTOR + 1);
-	romconf->roms[1] = (flashsize / 2) + (SECTOR_SIZE * (BOOT_CONFIG_SECTOR + 1));
+	romconf->roms[1] = SECTOR_SIZE * OTA_MAIN_SECTOR;
+// 	romconf->roms[2] = SECTOR_SIZE * (OTA_MAIN_SECTOR - 1);
+// 	romconf->roms[3] = SECTOR_SIZE * (OTA_MAIN_SECTOR - 2); //TODO: spare slots in case otamain grows
 }
 #endif
 
